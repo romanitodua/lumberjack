@@ -1,10 +1,11 @@
-package lumberjack
+package lamberjack
 
 import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -38,8 +39,8 @@ func TestNewFile(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 	existsWithContent(logFile(dir), b, t)
 	fileCount(dir, 1, t)
 }
@@ -52,7 +53,7 @@ func TestOpenExisting(t *testing.T) {
 	filename := logFile(dir)
 	data := []byte("foo!")
 	err := ioutil.WriteFile(filename, data, 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	existsWithContent(filename, data, t)
 
 	l := &Logger{
@@ -61,8 +62,8 @@ func TestOpenExisting(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
 	// make sure the file got appended
 	existsWithContent(filename, append(data, b...), t)
@@ -83,12 +84,12 @@ func TestWriteTooLong(t *testing.T) {
 	defer l.Close()
 	b := []byte("booooooooooooooo!")
 	n, err := l.Write(b)
-	notNil(err, t)
-	equals(0, n, t)
-	equals(err.Error(),
+	lumberjack.notNil(err, t)
+	lumberjack.equals(0, n, t)
+	lumberjack.equals(err.Error(),
 		fmt.Sprintf("write length %d exceeds maximum file size %d", len(b), l.MaxSize), t)
 	_, err = os.Stat(logFile(dir))
-	assert(os.IsNotExist(err), t, "File exists, but should not have been created")
+	lumberjack.assert(os.IsNotExist(err), t, "File exists, but should not have been created")
 }
 
 func TestMakeLogDir(t *testing.T) {
@@ -103,8 +104,8 @@ func TestMakeLogDir(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 	existsWithContent(logFile(dir), b, t)
 	fileCount(dir, 1, t)
 }
@@ -119,8 +120,8 @@ func TestDefaultFilename(t *testing.T) {
 	b := []byte("boo!")
 	n, err := l.Write(b)
 
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 	existsWithContent(filename, b, t)
 }
 
@@ -139,8 +140,8 @@ func TestAutoRotate(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
 	existsWithContent(filename, b, t)
 	fileCount(dir, 1, t)
@@ -149,8 +150,8 @@ func TestAutoRotate(t *testing.T) {
 
 	b2 := []byte("foooooo!")
 	n, err = l.Write(b2)
-	isNil(err, t)
-	equals(len(b2), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b2), n, t)
 
 	// the old logfile should be moved aside and the main logfile should have
 	// only the last write in it.
@@ -177,15 +178,15 @@ func TestFirstWriteRotate(t *testing.T) {
 
 	start := []byte("boooooo!")
 	err := ioutil.WriteFile(filename, start, 0600)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	newFakeTime()
 
 	// this would make us rotate
 	b := []byte("fooo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
 	existsWithContent(filename, b, t)
 	existsWithContent(backupFile(dir), start, t)
@@ -208,8 +209,8 @@ func TestMaxBackups(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
 	existsWithContent(filename, b, t)
 	fileCount(dir, 1, t)
@@ -219,8 +220,8 @@ func TestMaxBackups(t *testing.T) {
 	// this will put us over the max
 	b2 := []byte("foooooo!")
 	n, err = l.Write(b2)
-	isNil(err, t)
-	equals(len(b2), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b2), n, t)
 
 	// this will use the new fake time
 	secondFilename := backupFile(dir)
@@ -236,8 +237,8 @@ func TestMaxBackups(t *testing.T) {
 	// this will make us rotate again
 	b3 := []byte("baaaaaar!")
 	n, err = l.Write(b3)
-	isNil(err, t)
-	equals(len(b3), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b3), n, t)
 
 	// this will use the new fake time
 	thirdFilename := backupFile(dir)
@@ -266,13 +267,13 @@ func TestMaxBackups(t *testing.T) {
 	// It shouldn't get caught by our deletion filters.
 	notlogfile := logFile(dir) + ".foo"
 	err = ioutil.WriteFile(notlogfile, []byte("data"), 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	// Make a directory that exactly matches our log file filters... it still
 	// shouldn't get caught by the deletion filter since it's a directory.
 	notlogfiledir := backupFile(dir)
 	err = os.Mkdir(notlogfiledir, 0700)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	newFakeTime()
 
@@ -284,13 +285,13 @@ func TestMaxBackups(t *testing.T) {
 	// log files still exist.
 	compLogFile := fourthFilename + compressSuffix
 	err = ioutil.WriteFile(compLogFile, []byte("compress"), 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	// this will make us rotate again
 	b4 := []byte("baaaaaaz!")
 	n, err = l.Write(b4)
-	isNil(err, t)
-	equals(len(b4), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b4), n, t)
 
 	existsWithContent(fourthFilename, b3, t)
 	existsWithContent(fourthFilename+compressSuffix, []byte("compress"), t)
@@ -333,24 +334,24 @@ func TestCleanupExistingBackups(t *testing.T) {
 	data := []byte("data")
 	backup := backupFile(dir)
 	err := ioutil.WriteFile(backup, data, 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	newFakeTime()
 
 	backup = backupFile(dir)
 	err = ioutil.WriteFile(backup+compressSuffix, data, 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	newFakeTime()
 
 	backup = backupFile(dir)
 	err = ioutil.WriteFile(backup, data, 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	// now create a primary log file with some data
 	filename := logFile(dir)
 	err = ioutil.WriteFile(filename, data, 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	l := &Logger{
 		Filename:   filename,
@@ -363,8 +364,8 @@ func TestCleanupExistingBackups(t *testing.T) {
 
 	b2 := []byte("foooooo!")
 	n, err := l.Write(b2)
-	isNil(err, t)
-	equals(len(b2), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b2), n, t)
 
 	// we need to wait a little bit since the files get deleted on a different
 	// goroutine.
@@ -390,8 +391,8 @@ func TestMaxAge(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
 	existsWithContent(filename, b, t)
 	fileCount(dir, 1, t)
@@ -401,8 +402,8 @@ func TestMaxAge(t *testing.T) {
 
 	b2 := []byte("foooooo!")
 	n, err = l.Write(b2)
-	isNil(err, t)
-	equals(len(b2), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b2), n, t)
 	existsWithContent(backupFile(dir), b, t)
 
 	// we need to wait a little bit since the files get deleted on a different
@@ -423,8 +424,8 @@ func TestMaxAge(t *testing.T) {
 
 	b3 := []byte("baaaaar!")
 	n, err = l.Write(b3)
-	isNil(err, t)
-	equals(len(b3), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b3), n, t)
 	existsWithContent(backupFile(dir), b2, t)
 
 	// we need to wait a little bit since the files get deleted on a different
@@ -451,34 +452,34 @@ func TestOldLogFiles(t *testing.T) {
 	filename := logFile(dir)
 	data := []byte("data")
 	err := ioutil.WriteFile(filename, data, 07)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	// This gives us a time with the same precision as the time we get from the
 	// timestamp in the name.
 	t1, err := time.Parse(backupTimeFormat, fakeTime().UTC().Format(backupTimeFormat))
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	backup := backupFile(dir)
 	err = ioutil.WriteFile(backup, data, 07)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	newFakeTime()
 
 	t2, err := time.Parse(backupTimeFormat, fakeTime().UTC().Format(backupTimeFormat))
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	backup2 := backupFile(dir)
 	err = ioutil.WriteFile(backup2, data, 07)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	l := &Logger{Filename: filename}
 	files, err := l.oldLogFiles()
-	isNil(err, t)
-	equals(2, len(files), t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(2, len(files), t)
 
 	// should be sorted by newest file first, which would be t2
-	equals(t2, files[0].timestamp, t)
-	equals(t1, files[1].timestamp, t)
+	lumberjack.equals(t2, files[0].timestamp, t)
+	lumberjack.equals(t1, files[1].timestamp, t)
 }
 
 func TestTimeFromName(t *testing.T) {
@@ -498,8 +499,8 @@ func TestTimeFromName(t *testing.T) {
 
 	for _, test := range tests {
 		got, err := l.timeFromName(test.filename, prefix, ext)
-		equals(got, test.want, t)
-		equals(err != nil, test.wantErr, t)
+		lumberjack.equals(got, test.want, t)
+		lumberjack.equals(err != nil, test.wantErr, t)
 	}
 }
 
@@ -518,13 +519,13 @@ func TestLocalTime(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
 	b2 := []byte("fooooooo!")
 	n2, err := l.Write(b2)
-	isNil(err, t)
-	equals(len(b2), n2, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b2), n2, t)
 
 	existsWithContent(logFile(dir), b2, t)
 	existsWithContent(backupFileLocal(dir), b, t)
@@ -545,8 +546,8 @@ func TestRotate(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
 	existsWithContent(filename, b, t)
 	fileCount(dir, 1, t)
@@ -554,7 +555,7 @@ func TestRotate(t *testing.T) {
 	newFakeTime()
 
 	err = l.Rotate()
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	// we need to wait a little bit since the files get deleted on a different
 	// goroutine.
@@ -567,7 +568,7 @@ func TestRotate(t *testing.T) {
 	newFakeTime()
 
 	err = l.Rotate()
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	// we need to wait a little bit since the files get deleted on a different
 	// goroutine.
@@ -580,8 +581,8 @@ func TestRotate(t *testing.T) {
 
 	b2 := []byte("foooooo!")
 	n, err = l.Write(b2)
-	isNil(err, t)
-	equals(len(b2), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b2), n, t)
 
 	// this will use the new fake time
 	existsWithContent(filename, b2, t)
@@ -603,8 +604,8 @@ func TestCompressOnRotate(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
 	existsWithContent(filename, b, t)
 	fileCount(dir, 1, t)
@@ -612,7 +613,7 @@ func TestCompressOnRotate(t *testing.T) {
 	newFakeTime()
 
 	err = l.Rotate()
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	// the old logfile should be moved aside and the main logfile should have
 	// nothing in it.
@@ -627,9 +628,9 @@ func TestCompressOnRotate(t *testing.T) {
 	bc := new(bytes.Buffer)
 	gz := gzip.NewWriter(bc)
 	_, err = gz.Write(b)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	err = gz.Close()
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	existsWithContent(backupFile(dir)+compressSuffix, bc.Bytes(), t)
 	notExist(backupFile(dir), t)
 
@@ -655,16 +656,16 @@ func TestCompressOnResume(t *testing.T) {
 	filename2 := backupFile(dir)
 	b := []byte("foo!")
 	err := ioutil.WriteFile(filename2, b, 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	err = ioutil.WriteFile(filename2+compressSuffix, []byte{}, 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	newFakeTime()
 
 	b2 := []byte("boo!")
 	n, err := l.Write(b2)
-	isNil(err, t)
-	equals(len(b2), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b2), n, t)
 	existsWithContent(filename, b2, t)
 
 	// we need to wait a little bit since the files get compressed on a different
@@ -676,9 +677,9 @@ func TestCompressOnResume(t *testing.T) {
 	bc := new(bytes.Buffer)
 	gz := gzip.NewWriter(bc)
 	_, err = gz.Write(b)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	err = gz.Close()
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	existsWithContent(filename2+compressSuffix, bc.Bytes(), t)
 	notExist(filename2, t)
 
@@ -698,13 +699,13 @@ func TestJson(t *testing.T) {
 
 	l := Logger{}
 	err := json.Unmarshal(data, &l)
-	isNil(err, t)
-	equals("foo", l.Filename, t)
-	equals(5, l.MaxSize, t)
-	equals(10, l.MaxAge, t)
-	equals(3, l.MaxBackups, t)
-	equals(true, l.LocalTime, t)
-	equals(true, l.Compress, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals("foo", l.Filename, t)
+	lumberjack.equals(5, l.MaxSize, t)
+	lumberjack.equals(10, l.MaxAge, t)
+	lumberjack.equals(3, l.MaxBackups, t)
+	lumberjack.equals(true, l.LocalTime, t)
+	lumberjack.equals(true, l.Compress, t)
 }
 
 // makeTempDir creates a file with a semi-unique name in the OS temp directory.
@@ -713,19 +714,19 @@ func TestJson(t *testing.T) {
 func makeTempDir(name string, t testing.TB) string {
 	dir := time.Now().Format(name + backupTimeFormat)
 	dir = filepath.Join(os.TempDir(), dir)
-	isNilUp(os.Mkdir(dir, 0700), t, 1)
+	lumberjack.isNilUp(os.Mkdir(dir, 0700), t, 1)
 	return dir
 }
 
 // existsWithContent checks that the given file exists and has the correct content.
 func existsWithContent(path string, content []byte, t testing.TB) {
 	info, err := os.Stat(path)
-	isNilUp(err, t, 1)
-	equalsUp(int64(len(content)), info.Size(), t, 1)
+	lumberjack.isNilUp(err, t, 1)
+	lumberjack.equalsUp(int64(len(content)), info.Size(), t, 1)
 
 	b, err := ioutil.ReadFile(path)
-	isNilUp(err, t, 1)
-	equalsUp(content, b, t, 1)
+	lumberjack.isNilUp(err, t, 1)
+	lumberjack.equalsUp(content, b, t, 1)
 }
 
 // logFile returns the log file name in the given directory for the current fake
@@ -751,9 +752,9 @@ func logFileLocal(dir string) string {
 // fileCount checks that the number of files in the directory is exp.
 func fileCount(dir string, exp int, t testing.TB) {
 	files, err := ioutil.ReadDir(dir)
-	isNilUp(err, t, 1)
+	lumberjack.isNilUp(err, t, 1)
 	// Make sure no other files were created.
-	equalsUp(exp, len(files), t, 1)
+	lumberjack.equalsUp(exp, len(files), t, 1)
 }
 
 // newFakeTime sets the fake "current time" to two days later.
@@ -763,10 +764,10 @@ func newFakeTime() {
 
 func notExist(path string, t testing.TB) {
 	_, err := os.Stat(path)
-	assertUp(os.IsNotExist(err), t, 1, "expected to get os.IsNotExist, but instead got %v", err)
+	lumberjack.assertUp(os.IsNotExist(err), t, 1, "expected to get os.IsNotExist, but instead got %v", err)
 }
 
 func exists(path string, t testing.TB) {
 	_, err := os.Stat(path)
-	assertUp(err == nil, t, 1, "expected file to exist, but got error from os.Stat: %v", err)
+	lumberjack.assertUp(err == nil, t, 1, "expected file to exist, but got error from os.Stat: %v", err)
 }

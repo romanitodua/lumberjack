@@ -1,8 +1,10 @@
+//go:build linux
 // +build linux
 
-package lumberjack
+package lamberjack
 
 import (
+	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"syscall"
 	"testing"
@@ -10,15 +12,15 @@ import (
 )
 
 func TestMaintainMode(t *testing.T) {
-	currentTime = fakeTime
-	dir := makeTempDir("TestMaintainMode", t)
+	lumberjack.currentTime = lumberjack.fakeTime
+	dir := lumberjack.makeTempDir("TestMaintainMode", t)
 	defer os.RemoveAll(dir)
 
-	filename := logFile(dir)
+	filename := lumberjack.logFile(dir)
 
 	mode := os.FileMode(0600)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, mode)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	f.Close()
 
 	l := &Logger{
@@ -29,39 +31,39 @@ func TestMaintainMode(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
-	newFakeTime()
+	lumberjack.newFakeTime()
 
 	err = l.Rotate()
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
-	filename2 := backupFile(dir)
+	filename2 := lumberjack.backupFile(dir)
 	info, err := os.Stat(filename)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	info2, err := os.Stat(filename2)
-	isNil(err, t)
-	equals(mode, info.Mode(), t)
-	equals(mode, info2.Mode(), t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(mode, info.Mode(), t)
+	lumberjack.equals(mode, info2.Mode(), t)
 }
 
 func TestMaintainOwner(t *testing.T) {
 	fakeFS := newFakeFS()
 	osChown = fakeFS.Chown
-	osStat = fakeFS.Stat
+	lumberjack.osStat = fakeFS.Stat
 	defer func() {
 		osChown = os.Chown
-		osStat = os.Stat
+		lumberjack.osStat = os.Stat
 	}()
-	currentTime = fakeTime
-	dir := makeTempDir("TestMaintainOwner", t)
+	lumberjack.currentTime = lumberjack.fakeTime
+	dir := lumberjack.makeTempDir("TestMaintainOwner", t)
 	defer os.RemoveAll(dir)
 
-	filename := logFile(dir)
+	filename := lumberjack.logFile(dir)
 
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	f.Close()
 
 	l := &Logger{
@@ -72,29 +74,29 @@ func TestMaintainOwner(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
-	newFakeTime()
+	lumberjack.newFakeTime()
 
 	err = l.Rotate()
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
-	equals(555, fakeFS.files[filename].uid, t)
-	equals(666, fakeFS.files[filename].gid, t)
+	lumberjack.equals(555, fakeFS.files[filename].uid, t)
+	lumberjack.equals(666, fakeFS.files[filename].gid, t)
 }
 
 func TestCompressMaintainMode(t *testing.T) {
-	currentTime = fakeTime
+	lumberjack.currentTime = lumberjack.fakeTime
 
-	dir := makeTempDir("TestCompressMaintainMode", t)
+	dir := lumberjack.makeTempDir("TestCompressMaintainMode", t)
 	defer os.RemoveAll(dir)
 
-	filename := logFile(dir)
+	filename := lumberjack.logFile(dir)
 
 	mode := os.FileMode(0600)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, mode)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	f.Close()
 
 	l := &Logger{
@@ -106,13 +108,13 @@ func TestCompressMaintainMode(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
-	newFakeTime()
+	lumberjack.newFakeTime()
 
 	err = l.Rotate()
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	// we need to wait a little bit since the files get compressed on a different
 	// goroutine.
@@ -120,31 +122,31 @@ func TestCompressMaintainMode(t *testing.T) {
 
 	// a compressed version of the log file should now exist with the correct
 	// mode.
-	filename2 := backupFile(dir)
+	filename2 := lumberjack.backupFile(dir)
 	info, err := os.Stat(filename)
-	isNil(err, t)
-	info2, err := os.Stat(filename2 + compressSuffix)
-	isNil(err, t)
-	equals(mode, info.Mode(), t)
-	equals(mode, info2.Mode(), t)
+	lumberjack.isNil(err, t)
+	info2, err := os.Stat(filename2 + lumberjack.compressSuffix)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(mode, info.Mode(), t)
+	lumberjack.equals(mode, info2.Mode(), t)
 }
 
 func TestCompressMaintainOwner(t *testing.T) {
 	fakeFS := newFakeFS()
 	osChown = fakeFS.Chown
-	osStat = fakeFS.Stat
+	lumberjack.osStat = fakeFS.Stat
 	defer func() {
 		osChown = os.Chown
-		osStat = os.Stat
+		lumberjack.osStat = os.Stat
 	}()
-	currentTime = fakeTime
-	dir := makeTempDir("TestCompressMaintainOwner", t)
+	lumberjack.currentTime = lumberjack.fakeTime
+	dir := lumberjack.makeTempDir("TestCompressMaintainOwner", t)
 	defer os.RemoveAll(dir)
 
-	filename := logFile(dir)
+	filename := lumberjack.logFile(dir)
 
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0644)
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 	f.Close()
 
 	l := &Logger{
@@ -156,13 +158,13 @@ func TestCompressMaintainOwner(t *testing.T) {
 	defer l.Close()
 	b := []byte("boo!")
 	n, err := l.Write(b)
-	isNil(err, t)
-	equals(len(b), n, t)
+	lumberjack.isNil(err, t)
+	lumberjack.equals(len(b), n, t)
 
-	newFakeTime()
+	lumberjack.newFakeTime()
 
 	err = l.Rotate()
-	isNil(err, t)
+	lumberjack.isNil(err, t)
 
 	// we need to wait a little bit since the files get compressed on a different
 	// goroutine.
@@ -170,9 +172,9 @@ func TestCompressMaintainOwner(t *testing.T) {
 
 	// a compressed version of the log file should now exist with the correct
 	// owner.
-	filename2 := backupFile(dir)
-	equals(555, fakeFS.files[filename2+compressSuffix].uid, t)
-	equals(666, fakeFS.files[filename2+compressSuffix].gid, t)
+	filename2 := lumberjack.backupFile(dir)
+	lumberjack.equals(555, fakeFS.files[filename2+lumberjack.compressSuffix].uid, t)
+	lumberjack.equals(666, fakeFS.files[filename2+lumberjack.compressSuffix].gid, t)
 }
 
 type fakeFile struct {

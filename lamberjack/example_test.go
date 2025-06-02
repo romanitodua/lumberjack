@@ -1,4 +1,4 @@
-package lumberjack
+package lamberjack
 
 import (
 	"log"
